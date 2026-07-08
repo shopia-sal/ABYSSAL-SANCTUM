@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abyssal Sanctum — WebXR Capstone</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #020a12;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      canvas {
+        display: block;
+      }
+
+      #vignette {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 4;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(2, 10, 18, 0) 45%,
+          rgba(2, 10, 18, 0.75) 100%
+        );
+      }
+
+      #crosshair {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 5;
+        border: 1.5px solid rgba(45, 230, 201, 0.85);
+        box-shadow: 0 0 8px rgba(45, 230, 201, 0.7);
+      }
+
+      #startOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 8, 14, 0.94);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #dff5f0;
+        text-align: center;
+        z-index: 10;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+      }
+      #startOverlay h1 {
+        font-size: 2.1rem;
+        letter-spacing: 3px;
+        color: #2de6c9;
+        font-family: Georgia, serif;
+        text-shadow: 0 0 20px rgba(45, 230, 201, 0.6);
+      }
+      #startOverlay p {
+        margin-top: 14px;
+        color: #8fb3ad;
+        font-size: 0.95rem;
+        line-height: 1.8;
+      }
+      #startOverlay b {
+        color: #8b5cf6;
+      }
+      #startOverlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #hud {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 5;
+        color: #cfeee7;
+        background: rgba(4, 14, 20, 0.55);
+        border: 1px solid rgba(45, 230, 201, 0.3);
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.6;
+        pointer-events: none;
+        backdrop-filter: blur(4px);
+      }
+      #hud span {
+        color: #2de6c9;
+        font-weight: bold;
+      }
+
+      #vrBtnWrap {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startOverlay">
+      <h1>🌊 ABYSSAL SANCTUM</h1>
+      <p>
+        Berenanglah menembus reruntuhan kuil kuno di dasar gua bawah laut <br />
+        dikelilingi karang bioluminescent, ubur-ubur melayang, dan altar
+        bercahaya.
+      </p>
+      <p style="margin-top: 22px">
+        <b>Klik</b> di mana saja untuk mengunci kursor dan mulai berenang
+      </p>
+      <p>
+        <b>W A S D</b> berenang &nbsp;·&nbsp; <b>SPASI</b> naik &nbsp;·&nbsp;
+        <b>SHIFT</b> turun &nbsp;·&nbsp; <b>Klik kiri</b> lepaskan plankton
+        bercahaya &nbsp;·&nbsp; <b>ESC</b> keluar kursor
+      </p>
+    </div>
+
+    <div id="vignette"></div>
+    <div id="crosshair"></div>
+
+    <div id="hud">
+      Plankton melayang: <span id="ballCount">0</span><br />
+      FPS: <span id="fpsCount">--</span>
+    </div>
+
+    <div id="vrBtnWrap"></div>
+
+    <canvas id="c"></canvas>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
