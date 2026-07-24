@@ -6,6 +6,7 @@ const DRAG = 1.6;
 const BUOYANCY = 0.6;
 const MAX_LIFE = 3.5;
 const FADE_START = 2.6;
+
 const MAX_ORBS = 50;
 
 const ORB_COLORS = [0x2de6c9, 0x8b5cf6, 0xff6ec7, 0x7fffa0, 0x3a7ca5];

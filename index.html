@@ -4,24 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Abyssal Sanctum — WebXR Capstone</title>
+    <!-- Google Fonts: Cinzel for Ancient Oceanic Titles & Outfit for Modern UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
-      html,
-      body {
+      html, body {
         width: 100%;
         height: 100%;
         overflow: hidden;
         background: #020a12;
-        font-family: "Segoe UI", Arial, sans-serif;
+        font-family: 'Outfit', sans-serif;
       }
       canvas {
         display: block;
       }
 
+      /* Vignette effect */
       #vignette {
         position: fixed;
         inset: 0;
@@ -29,76 +33,230 @@
         z-index: 4;
         background: radial-gradient(
           ellipse at center,
-          rgba(2, 10, 18, 0) 45%,
-          rgba(2, 10, 18, 0.75) 100%
+          rgba(2, 10, 18, 0) 40%,
+          rgba(2, 10, 18, 0.85) 100%
         );
       }
 
+      /* Reticle Crosshair */
       #crosshair {
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
         pointer-events: none;
         z-index: 5;
-        border: 1.5px solid rgba(45, 230, 201, 0.85);
-        box-shadow: 0 0 8px rgba(45, 230, 201, 0.7);
+        border: 2px solid rgba(45, 230, 201, 0.85);
+        box-shadow: 0 0 12px rgba(45, 230, 201, 0.8), inset 0 0 4px rgba(45, 230, 201, 0.5);
+        transition: transform 0.2s ease, border-color 0.2s ease;
       }
 
+      /* Top HUD Navigation Bar */
+      #topHud {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        display: flex;
+        gap: 12px;
+        background: rgba(4, 14, 20, 0.75);
+        border: 1px solid rgba(45, 230, 201, 0.4);
+        padding: 8px 16px;
+        border-radius: 30px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 20px rgba(45, 230, 201, 0.25);
+      }
+      .nav-btn {
+        background: rgba(45, 230, 201, 0.15);
+        color: #2de6c9;
+        border: 1px solid rgba(45, 230, 201, 0.5);
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.5px;
+      }
+      .nav-btn:hover {
+        background: rgba(45, 230, 201, 0.35);
+        color: #ffffff;
+        box-shadow: 0 0 15px rgba(45, 230, 201, 0.7);
+        transform: translateY(-2px);
+      }
+      .nav-btn.active {
+        background: rgba(45, 230, 201, 0.3);
+        border-color: #2de6c9;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(45, 230, 201, 0.6);
+      }
+      .nav-btn.purple {
+        background: rgba(139, 92, 246, 0.2);
+        color: #c4b5fd;
+        border-color: rgba(139, 92, 246, 0.5);
+      }
+      .nav-btn.purple:hover {
+        background: rgba(139, 92, 246, 0.45);
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+      }
+
+      /* Premium Glassmorphic Start Overlay */
       #startOverlay {
         position: fixed;
         inset: 0;
-        background: rgba(2, 8, 14, 0.94);
+        background: radial-gradient(circle at center, rgba(3, 16, 28, 0.85) 0%, rgba(2, 8, 14, 0.96) 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         color: #dff5f0;
         text-align: center;
-        z-index: 10;
+        z-index: 20;
         cursor: pointer;
-        transition: opacity 0.3s ease;
-      }
-      #startOverlay h1 {
-        font-size: 2.1rem;
-        letter-spacing: 3px;
-        color: #2de6c9;
-        font-family: Georgia, serif;
-        text-shadow: 0 0 20px rgba(45, 230, 201, 0.6);
-      }
-      #startOverlay p {
-        margin-top: 14px;
-        color: #8fb3ad;
-        font-size: 0.95rem;
-        line-height: 1.8;
-      }
-      #startOverlay b {
-        color: #8b5cf6;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+        backdrop-filter: blur(12px);
       }
       #startOverlay.hidden {
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
       }
 
+      .start-card {
+        background: rgba(4, 18, 28, 0.75);
+        border: 2px solid rgba(45, 230, 201, 0.4);
+        padding: 38px 48px;
+        border-radius: 24px;
+        max-width: 620px;
+        box-shadow: 0 0 40px rgba(45, 230, 201, 0.25), inset 0 0 30px rgba(45, 230, 201, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .logo-icon {
+        font-size: 3.2rem;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 0 16px rgba(45, 230, 201, 0.8));
+        animation: floatLogo 3s ease-in-out infinite alternate;
+      }
+      @keyframes floatLogo {
+        from { transform: translateY(0); }
+        to { transform: translateY(-8px); }
+      }
+
+      #startOverlay h1 {
+        font-family: 'Cinzel', serif;
+        font-size: 2.3rem;
+        font-weight: 900;
+        letter-spacing: 4px;
+        color: #2de6c9;
+        text-shadow: 0 0 25px rgba(45, 230, 201, 0.7);
+        margin-bottom: 10px;
+      }
+
+      #startOverlay .subtitle {
+        font-size: 0.95rem;
+        color: #8fb3ad;
+        line-height: 1.7;
+        margin-bottom: 24px;
+        max-width: 480px;
+      }
+
+      /* Glowing Start Button */
+      .start-btn {
+        background: linear-gradient(135deg, rgba(45, 230, 201, 0.25), rgba(139, 92, 246, 0.25));
+        border: 1.5px solid #2de6c9;
+        color: #ffffff;
+        padding: 14px 36px;
+        border-radius: 30px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 0 20px rgba(45, 230, 201, 0.5);
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+      }
+      .start-btn:hover {
+        background: linear-gradient(135deg, rgba(45, 230, 201, 0.5), rgba(139, 92, 246, 0.5));
+        box-shadow: 0 0 35px rgba(45, 230, 201, 0.8);
+        transform: scale(1.05);
+      }
+
+      /* Controls guide inside start card */
+      .controls-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .ctrl-badge {
+        background: rgba(45, 230, 201, 0.1);
+        border: 1px solid rgba(45, 230, 201, 0.25);
+        color: #cfeee7;
+        padding: 6px 14px;
+        border-radius: 12px;
+        font-size: 0.82rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ctrl-badge b {
+        color: #2de6c9;
+      }
+
+      /* HUD Counter Overlay Top-Left */
       #hud {
         position: fixed;
         top: 16px;
         left: 16px;
         z-index: 5;
         color: #cfeee7;
-        background: rgba(4, 14, 20, 0.55);
-        border: 1px solid rgba(45, 230, 201, 0.3);
-        padding: 10px 14px;
-        border-radius: 8px;
+        background: rgba(4, 14, 20, 0.7);
+        border: 1px solid rgba(45, 230, 201, 0.35);
+        padding: 10px 16px;
+        border-radius: 12px;
         font-size: 13px;
         line-height: 1.6;
         pointer-events: none;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 0 15px rgba(45, 230, 201, 0.2);
       }
       #hud span {
+        color: #2de6c9;
+        font-weight: 700;
+      }
+
+      /* Bottom Right Glassmorphic Controls Hint */
+      #controlsHint {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 5;
+        background: rgba(4, 14, 20, 0.65);
+        border: 1px solid rgba(45, 230, 201, 0.3);
+        padding: 10px 16px;
+        border-radius: 14px;
+        backdrop-filter: blur(8px);
+        color: #8fb3ad;
+        font-size: 12px;
+        pointer-events: none;
+        display: flex;
+        gap: 12px;
+      }
+      .hint-key {
         color: #2de6c9;
         font-weight: bold;
       }
@@ -113,29 +271,53 @@
     </style>
   </head>
   <body>
+    <!-- Top HUD Scene Navigation Bar -->
+    <div id="topHud">
+      <a href="index.html" class="nav-btn active">
+        🌊 Scene 1 — Abyssal Sanctum
+      </a>
+      <a href="scene2.html" class="nav-btn">
+        📜 Scene 2 — Hall of Relics ➔
+      </a>
+      <a href="scene3-model.html" class="nav-btn purple">
+        🏛️ Scene 3 — Guardian Chamber ➔
+      </a>
+    </div>
+
+    <!-- Glassmorphic Start Overlay -->
     <div id="startOverlay">
-      <h1>🌊 ABYSSAL SANCTUM</h1>
-      <p>
-        Berenanglah menembus reruntuhan kuil kuno di dasar gua bawah laut <br />
-        dikelilingi karang bioluminescent, ubur-ubur melayang, dan altar
-        bercahaya.
-      </p>
-      <p style="margin-top: 22px">
-        <b>Klik</b> di mana saja untuk mengunci kursor dan mulai berenang
-      </p>
-      <p>
-        <b>W A S D</b> berenang &nbsp;·&nbsp; <b>SPASI</b> naik &nbsp;·&nbsp;
-        <b>SHIFT</b> turun &nbsp;·&nbsp; <b>Klik kiri</b> lepaskan plankton
-        bercahaya &nbsp;·&nbsp; <b>ESC</b> keluar kursor
-      </p>
+      <div class="start-card">
+        <div class="logo-icon">🌊</div>
+        <h1>ABYSSAL SANCTUM</h1>
+        <p class="subtitle">
+          Jelajahi peradaban kuno dasar gua bawah laut, koleksi etalase museum 3D, karang bioluminescent, dan portal gerbang samudra.
+        </p>
+
+        <button class="start-btn">JELAJAHI SANCTUM ➔</button>
+
+        <div class="controls-grid">
+          <div class="ctrl-badge"><b>W A S D</b> Berenang</div>
+          <div class="ctrl-badge"><b>SPASI</b> Naik</div>
+          <div class="ctrl-badge"><b>SHIFT</b> Turun</div>
+          <div class="ctrl-badge"><b>Klik Kiri</b> Plankton Cahaya</div>
+          <div class="ctrl-badge"><b>ESC</b> Lepas Kursor</div>
+        </div>
+      </div>
     </div>
 
     <div id="vignette"></div>
     <div id="crosshair"></div>
 
+    <!-- HUD Stats -->
     <div id="hud">
       Plankton melayang: <span id="ballCount">0</span><br />
       FPS: <span id="fpsCount">--</span>
+    </div>
+
+    <!-- Controls Hint Bottom Right -->
+    <div id="controlsHint">
+      <span><span class="hint-key">WASD</span> Berenang</span>
+      <span><span class="hint-key">Klik Portal</span> Pindah Scene</span>
     </div>
 
     <div id="vrBtnWrap"></div>

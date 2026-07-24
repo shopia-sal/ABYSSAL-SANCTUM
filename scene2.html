@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abyssal Sanctum — Hall of Ancient Relics (Scene 2)</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020a12;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    
+    /* Vignette effect matching main scene */
+    #vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(2, 10, 18, 0) 40%,
+        rgba(2, 10, 18, 0.8) 100%
+      );
+    }
+
+    /* Top HUD Navigation Bar */
+    #topHud {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      background: rgba(4, 14, 20, 0.75);
+      border: 1px solid rgba(45, 230, 201, 0.4);
+      padding: 8px 16px;
+      border-radius: 30px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px rgba(45, 230, 201, 0.25);
+    }
+    .nav-btn {
+      background: rgba(45, 230, 201, 0.12);
+      color: #2de6c9;
+      border: 1px solid rgba(45, 230, 201, 0.4);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn:hover {
+      background: rgba(45, 230, 201, 0.35);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(45, 230, 201, 0.6);
+      transform: translateY(-2px);
+    }
+    .nav-btn.primary {
+      background: rgba(139, 92, 246, 0.25);
+      color: #c4b5fd;
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+    .nav-btn.primary:hover {
+      background: rgba(139, 92, 246, 0.5);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+    }
+
+    /* Scene Title Banner */
+    #titleBanner {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      color: #dff5f0;
+      text-align: center;
+      pointer-events: none;
+    }
+    #titleBanner h2 {
+      font-family: Georgia, serif;
+      font-size: 1.4rem;
+      color: #2de6c9;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(45, 230, 201, 0.7);
+    }
+    #titleBanner p {
+      font-size: 0.85rem;
+      color: #8fb3ad;
+      margin-top: 2px;
+    }
+
+    /* Ancient Holographic Rune Info Panel */
+    #infoModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 90%;
+      max-width: 480px;
+      background: rgba(3, 14, 24, 0.92);
+      border: 2px solid #2de6c9;
+      border-radius: 16px;
+      padding: 24px;
+      color: #dff5f0;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 0 30px rgba(45, 230, 201, 0.4), inset 0 0 20px rgba(45, 230, 201, 0.1);
+      backdrop-filter: blur(12px);
+    }
+    #infoModal.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #infoModal h3 {
+      font-family: Georgia, serif;
+      font-size: 1.5rem;
+      color: #2de6c9;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px rgba(45, 230, 201, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #infoModal .subtitle {
+      font-size: 0.85rem;
+      color: #8b5cf6;
+      font-style: italic;
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+    }
+    #infoModal p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #b5ded6;
+      margin-bottom: 20px;
+    }
+    #infoModal .close-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(45, 230, 201, 0.15);
+      border: 1px solid #2de6c9;
+      color: #2de6c9;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    #infoModal .close-btn:hover {
+      background: #2de6c9;
+      color: #020a12;
+      box-shadow: 0 0 15px rgba(45, 230, 201, 0.8);
+    }
+
+    /* Instruction hint at bottom */
+    #hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      color: #8fb3ad;
+      font-size: 12px;
+      background: rgba(4, 14, 20, 0.6);
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(45, 230, 201, 0.2);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="vignette"></div>
+
+  <!-- Top HUD Buttons -->
+  <div id="topHud">
+    <a href="index.html" class="nav-btn">
+      🌊 Abyssal Sanctum
+    </a>
+    <a href="scene3-model.html" class="nav-btn primary">
+      🏛️ Scene 3 — Guardian Chamber ➔
+    </a>
+  </div>
+
+  <!-- Title Banner -->
+  <div id="titleBanner">
+    <h2>SCENE 2: HALL OF ANCIENT RELICS</h2>
+    <p>Aula Kuno Peninggalan Peradaban Bawah Laut Abyssal Sanctum</p>
+  </div>
+
+  <!-- Interactive Info Modal -->
+  <div id="infoModal">
+    <h3 id="modalTitle">Artefak Kuno</h3>
+    <div class="subtitle" id="modalSubtitle">Abyssal Relic</div>
+    <p id="modalDesc">Deskripsi artefak akan muncul di sini.</p>
+    <button class="close-btn" onclick="closeModal()">TUTUP PRASASTI</button>
+  </div>
+
+  <!-- Hint -->
+  <div id="hint">Arahkan kursor & klik hotspot artefak bercahaya untuk membaca prasasti kuno</div>
+
+  <!-- A-Frame 360 Scene -->
+  <a-scene embedded style="width:100%; height:100%;">
+    <a-assets>
+      <img id="skyPanorama" src="assets/underwater_360.png" />
+    </a-assets>
+
+    <!-- Underwater Fog & Lighting -->
+    <a-scene fog="type: exponential; color: #020a12; density: 0.025"></a-scene>
+    <a-light type="ambient" color="#113344" intensity="0.75"></a-light>
+    <a-light type="directional" color="#4fd7c9" intensity="0.8" position="4 15 -6"></a-light>
+    <a-light type="point" color="#2de6c9" intensity="1.5" distance="15" position="0 2 0"></a-light>
+
+    <!-- 360 Panorama Sky -->
+    <a-sky src="#skyPanorama" rotation="0 -90 0"></a-sky>
+
+    <!-- Camera & Cursor Rig -->
+    <a-entity id="cameraRig" position="0 1.6 0">
+      <a-camera look-controls="pointerLockEnabled: false">
+        <a-cursor
+          id="cursor"
+          color="#2de6c9"
+          raycaster="objects: .hotspot, .vr-btn"
+          animation__click="property: scale; startEvents: click; easing: easeInCubic; durability: 150; from: 0.1 0.1 0.1; to: 1 1 1"
+          animation__fusing="property: scale; startEvents: fusing; easing: easeInCubic; durability: 1200; from: 1 1 1; to: 0.2 0.2 0.2"
+        ></a-cursor>
+      </a-camera>
+    </a-entity>
+
+    <!-- HOTSPOT 1: Trident of the Ocean King -->
+    <a-entity id="hotspot1" class="hotspot" position="-3.5 1 -4"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onmouseenter="showArtifactInfo('Trident of the Ocean King', 'Trisula Penguasa Samudra', 'Trisula kuno pemfokus energi bawah laut yang dibuat dari kristal murni samudra purba. Menurut prasasti, trisula ini digunakan oleh para penguasa Abyssal Sanctum untuk menstabilkan arus gua dan mengendalikan kekuatan bioluminescent.', '#2de6c9')"
+              onclick="showArtifactInfo('Trident of the Ocean King', 'Trisula Penguasa Samudra', 'Trisula kuno pemfokus energi bawah laut yang dibuat dari kristal murni samudra purba. Menurut prasasti, trisula ini digunakan oleh para penguasa Abyssal Sanctum untuk menstabilkan arus gua dan mengendalikan kekuatan bioluminescent.', '#2de6c9')">
+      <!-- Glow sphere core -->
+      <a-sphere class="hotspot" radius="0.35" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 0.9; transparent: true; opacity: 0.85"
+                animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0 0.15 0">
+      </a-sphere>
+      <!-- Outer aura ring -->
+      <a-ring class="hotspot" radius-inner="0.45" radius-outer="0.55" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 1.2; side: double; transparent: true; opacity: 0.6"
+              animation="property: rotation; to: 0 360 0; dur: 6000; easing: linear; loop: true">
+      </a-ring>
+      <!-- Pointlight for hotspot glow -->
+      <a-light type="point" color="#2de6c9" intensity="2" distance="5"></a-light>
+      <!-- Billboard Label -->
+      <a-text value="🔱 Trident of the Ocean King" align="center" position="0 0.75 0" scale="0.8 0.8 0.8" color="#2de6c9" side="double" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- HOTSPOT 2: Ancient Rune Tablet -->
+    <a-entity id="hotspot2" class="hotspot" position="3.5 1 -4"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onmouseenter="showArtifactInfo('Ancient Rune Tablet', 'Prasasti Ukiran Purba', 'Prasasti batu hitam kuno berukirkan bahasa peradaban bawah laut yang telah punah. Mengandung petunjuk lokasi Guardian Chamber serta rumus alkimia bioluminescent untuk mengaktifkan segel rahasia kuil.', '#8b5cf6')"
+              onclick="showArtifactInfo('Ancient Rune Tablet', 'Prasasti Ukiran Purba', 'Prasasti batu hitam kuno berukirkan bahasa peradaban bawah laut yang telah punah. Mengandung petunjuk lokasi Guardian Chamber serta rumus alkimia bioluminescent untuk mengaktifkan segel rahasia kuil.', '#8b5cf6')">
+      <!-- Glow box tablet -->
+      <a-box class="hotspot" width="0.6" height="0.8" depth="0.15" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 0.8; transparent: true; opacity: 0.85"
+             animation="property: position; dir: alternate; dur: 2400; easing: easeInOutSine; loop: true; to: 0 0.15 0">
+      </a-box>
+      <!-- Outer aura ring -->
+      <a-ring class="hotspot" radius-inner="0.5" radius-outer="0.6" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 1.2; side: double; transparent: true; opacity: 0.6"
+              animation="property: rotation; to: 360 360 0; dur: 8000; easing: linear; loop: true">
+      </a-ring>
+      <!-- Pointlight -->
+      <a-light type="point" color="#8b5cf6" intensity="2" distance="5"></a-light>
+      <!-- Billboard Label -->
+      <a-text value="📜 Ancient Rune Tablet" align="center" position="0 0.75 0" scale="0.8 0.8 0.8" color="#c4b5fd" side="double" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- HOTSPOT 3: Coral Energy Crystal -->
+    <a-entity id="hotspot3" class="hotspot" position="-3.5 1 2"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onmouseenter="showArtifactInfo('Coral Energy Crystal', 'Kristal Terumbu Karang Utama', 'Formasi kristal karang merah muda berdenyut yang menjadi sumber energi hayati seluruh biota laut di Abyssal Sanctum. Kristal ini menyerap radiasi kosmik air dan memancarkan cahaya bioluminescent yang menenangkan.', '#ff6ec7')"
+              onclick="showArtifactInfo('Coral Energy Crystal', 'Kristal Terumbu Karang Utama', 'Formasi kristal karang merah muda berdenyut yang menjadi sumber energi hayati seluruh biota laut di Abyssal Sanctum. Kristal ini menyerap radiasi kosmik air dan memancarkan cahaya bioluminescent yang menenangkan.', '#ff6ec7')">
+      <!-- Octahedron crystal model -->
+      <a-octahedron class="hotspot" radius="0.4" color="#ff6ec7" material="emissive: #ff6ec7; emissiveIntensity: 0.85; transparent: true; opacity: 0.85"
+                    animation="property: rotation; to: 0 360 0; dur: 5000; easing: linear; loop: true"
+                    animation__bob="property: position; dir: alternate; dur: 1800; easing: easeInOutSine; loop: true; to: 0 0.12 0">
+      </a-octahedron>
+      <a-ring class="hotspot" radius-inner="0.5" radius-outer="0.6" color="#ff6ec7" material="emissive: #ff6ec7; emissiveIntensity: 1.2; side: double; transparent: true; opacity: 0.6"
+              animation="property: rotation; to: 360 0 0; dur: 7000; easing: linear; loop: true">
+      </a-ring>
+      <a-light type="point" color="#ff6ec7" intensity="2" distance="5"></a-light>
+      <a-text value="🪸 Coral Energy Crystal" align="center" position="0 0.75 0" scale="0.8 0.8 0.8" color="#ff6ec7" side="double" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- HOTSPOT 4: Oceanic Compass -->
+    <a-entity id="hotspot4" class="hotspot" position="3.5 1 2"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onmouseenter="showArtifactInfo('Oceanic Compass', 'Kompas Navigasi Samudra Kuno', 'Artefak berupa kompas melayang dengan cakra perunggu dan kristal zamrud. Kompas ini tidak menunjuk ke arah utara magnetis bumi, melainkan selalu mengarah ke tempat beradanya Guardian Chamber di jantung kedalaman kuil.', '#7fffa0')"
+              onclick="showArtifactInfo('Oceanic Compass', 'Kompas Navigasi Samudra Kuno', 'Artefak berupa kompas melayang dengan cakra perunggu dan kristal zamrud. Kompas ini tidak menunjuk ke arah utara magnetis bumi, melainkan selalu mengarah ke tempat beradanya Guardian Chamber di jantung kedalaman kuil.', '#7fffa0')">
+      <!-- Torus ring geometry -->
+      <a-torus class="hotspot" radius="0.35" radius-tubular="0.06" color="#7fffa0" material="emissive: #7fffa0; emissiveIntensity: 0.9; transparent: true; opacity: 0.85"
+               animation="property: rotation; to: 360 180 360; dur: 6000; easing: linear; loop: true"
+               animation__bob="property: position; dir: alternate; dur: 2200; easing: easeInOutSine; loop: true; to: 0 0.15 0">
+      </a-torus>
+      <a-sphere class="hotspot" radius="0.15" color="#7fffa0" material="emissive: #7fffa0; emissiveIntensity: 1.5"></a-sphere>
+      <a-light type="point" color="#7fffa0" intensity="2" distance="5"></a-light>
+      <a-text value="🧭 Oceanic Compass" align="center" position="0 0.75 0" scale="0.8 0.8 0.8" color="#7fffa0" side="double" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- 3D VR Navigational Portals inside the scene -->
+    <!-- Portal to Abyssal Sanctum Main Scene (Scene 1) -->
+    <a-entity class="vr-btn hotspot" position="-1.8 0.3 -4.5"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onclick="window.location.href='index.html'">
+      <a-cylinder class="vr-btn hotspot" radius="0.65" height="0.12" color="#141f2b" material="emissive: #2de6c9; emissiveIntensity: 0.6"></a-cylinder>
+      <a-ring class="vr-btn hotspot" radius-inner="0.65" radius-outer="0.82" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 1.5; side: double" rotation="-90 0 0"></a-ring>
+      <a-text value="🌊 Ke Abyssal Sanctum (Scene 1)" align="center" position="0 0.55 0" color="#2de6c9" scale="0.75 0.75 0.75" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- Portal to Scene 3 -->
+    <a-entity class="vr-btn hotspot" position="1.8 0.3 -4.5"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onclick="window.location.href='scene3-model.html'">
+      <a-cylinder class="vr-btn hotspot" radius="0.65" height="0.12" color="#141f2b" material="emissive: #8b5cf6; emissiveIntensity: 0.6"></a-cylinder>
+      <a-ring class="vr-btn hotspot" radius-inner="0.65" radius-outer="0.82" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 1.5; side: double" rotation="-90 0 0"></a-ring>
+      <a-text value="🏛️ Lanjut ke Scene 3 ➔" align="center" position="0 0.55 0" color="#c4b5fd" scale="0.75 0.75 0.75" look-at="[camera]"></a-text>
+    </a-entity>
+
+    <!-- Floating Jellyfish Decor for Atmosphere -->
+    <a-entity position="-2 3 -3" animation="property: position; dir: alternate; dur: 3000; easing: easeInOutSine; loop: true; to: -2 3.8 -3">
+      <a-sphere radius="0.3" phi-length="360" phi-start="0" theta-length="100" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 0.6; transparent: true; opacity: 0.6"></a-sphere>
+    </a-entity>
+    <a-entity position="2.5 3.5 -2" animation="property: position; dir: alternate; dur: 3500; easing: easeInOutSine; loop: true; to: 2.5 4.3 -2">
+      <a-sphere radius="0.35" phi-length="360" phi-start="0" theta-length="100" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 0.6; transparent: true; opacity: 0.6"></a-sphere>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    function showArtifactInfo(title, subtitle, desc, themeColor) {
+      const modal = document.getElementById('infoModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSubtitle = document.getElementById('modalSubtitle');
+      const modalDesc = document.getElementById('modalDesc');
+
+      modalTitle.textContent = title;
+      modalSubtitle.textContent = subtitle;
+      modalDesc.textContent = desc;
+
+      modal.style.borderColor = themeColor;
+      modalTitle.style.color = themeColor;
+      modal.style.boxShadow = `0 0 30px ${themeColor}66, inset 0 0 20px ${themeColor}22`;
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('infoModal').classList.remove('active');
+    }
+
+    // A-Frame Look-at component helper for billboard text facing camera
+    AFRAME.registerComponent('look-at', {
+      schema: { type: 'selector' },
+      tick: function () {
+        if (this.data) {
+          this.el.object3D.lookAt(this.data.object3D.position);
+        } else if (this.el.sceneEl.camera) {
+          this.el.object3D.lookAt(this.el.sceneEl.camera.el.object3D.position);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

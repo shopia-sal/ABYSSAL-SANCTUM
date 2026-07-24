@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abyssal Sanctum — Guardian Chamber (Scene 3)</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020a12;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    
+    /* Vignette Overlay */
+    #vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(2, 10, 18, 0) 35%,
+        rgba(2, 10, 18, 0.85) 100%
+      );
+    }
+
+    /* Top Navigation HUD */
+    #topHud {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      background: rgba(4, 14, 20, 0.75);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      padding: 8px 16px;
+      border-radius: 30px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    }
+    .nav-btn {
+      background: rgba(45, 230, 201, 0.12);
+      color: #2de6c9;
+      border: 1px solid rgba(45, 230, 201, 0.4);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn:hover {
+      background: rgba(45, 230, 201, 0.35);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(45, 230, 201, 0.6);
+      transform: translateY(-2px);
+    }
+    .nav-btn.purple {
+      background: rgba(139, 92, 246, 0.2);
+      color: #c4b5fd;
+      border-color: rgba(139, 92, 246, 0.5);
+    }
+    .nav-btn.purple:hover {
+      background: rgba(139, 92, 246, 0.45);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.7);
+    }
+
+    /* Scene Header */
+    #titleBanner {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      color: #dff5f0;
+      text-align: center;
+      pointer-events: none;
+    }
+    #titleBanner h2 {
+      font-family: Georgia, serif;
+      font-size: 1.5rem;
+      color: #8b5cf6;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+    }
+    #titleBanner p {
+      font-size: 0.85rem;
+      color: #2de6c9;
+      margin-top: 2px;
+    }
+
+    /* Ancient Holographic Info Panel Modal */
+    #infoModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 90%;
+      max-width: 500px;
+      background: rgba(4, 12, 22, 0.94);
+      border: 2px solid #8b5cf6;
+      border-radius: 16px;
+      padding: 26px;
+      color: #dff5f0;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 0 35px rgba(139, 92, 246, 0.5), inset 0 0 20px rgba(45, 230, 201, 0.15);
+      backdrop-filter: blur(12px);
+    }
+    #infoModal.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #infoModal h3 {
+      font-family: Georgia, serif;
+      font-size: 1.6rem;
+      color: #2de6c9;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(45, 230, 201, 0.7);
+    }
+    #infoModal .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0 16px 0;
+      background: rgba(139, 92, 246, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    #infoModal .meta-item {
+      font-size: 0.82rem;
+    }
+    #infoModal .meta-item label {
+      color: #8b5cf6;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+    #infoModal .meta-item span {
+      color: #e2f7f3;
+    }
+    #infoModal p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: #b5ded6;
+      margin-bottom: 20px;
+    }
+    #infoModal .close-btn {
+      width: 100%;
+      padding: 10px;
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid #8b5cf6;
+      color: #c4b5fd;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    #infoModal .close-btn:hover {
+      background: #8b5cf6;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
+    }
+
+    #hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      color: #8fb3ad;
+      font-size: 12px;
+      background: rgba(4, 14, 20, 0.6);
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="vignette"></div>
+
+  <!-- Top HUD Buttons -->
+  <div id="topHud">
+    <a href="scene2.html" class="nav-btn purple">
+      ⬅️ Hall of Ancient Relics
+    </a>
+    <a href="index.html" class="nav-btn">
+      🌊 Abyssal Sanctum
+    </a>
+  </div>
+
+  <!-- Title Banner -->
+  <div id="titleBanner">
+    <h2>SCENE 3: GUARDIAN CHAMBER</h2>
+    <p>Ruang Penjaga Kuil Utama Abyssal Sanctum</p>
+  </div>
+
+  <!-- Guardian Artifact Info Panel Modal -->
+  <div id="infoModal">
+    <h3 id="modalTitle">Leviathan Sea Guardian</h3>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <label>Asal / Origin</label>
+        <span id="modalOrigin">Abyssal Sanctum Deep Core</span>
+      </div>
+      <div class="meta-item">
+        <label>Periode Peradaban</label>
+        <span id="modalEra">First Era of Atlantis</span>
+      </div>
+    </div>
+    <p id="modalDesc">
+      Penjaga agung kuil bawah laut yang mengalirkan gelombang energi bioluminescent ke seluruh lorong Abyssal Sanctum. Artefak totem kuno ini dipahat dari batu karang purba yang diselimuti mahkota zamrud serta kristal laut bercahaya.
+    </p>
+    <button class="close-btn" onclick="closeModal()">TUTUP PANEL GUARDIAN</button>
+  </div>
+
+  <!-- Hint -->
+  <div id="hint">Klik Model Guardian 3D untuk memutar 360°, membesarkan, dan membuka panel informasi</div>
+
+  <!-- A-Frame 3D Scene -->
+  <a-scene embedded style="width:100%; height:100%;">
+    <a-assets>
+      <a-asset-item id="guardianGlb" src="assets/guardian.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- Deep Underwater Environment Fog & Atmosphere -->
+    <a-scene fog="type: exponential; color: #020a12; density: 0.022"></a-scene>
+    <a-sky color="#020a12"></a-sky>
+
+    <!-- Lighting setup: Cyan & Violet bioluminescent glow + shaft lights -->
+    <a-light type="ambient" color="#0c2333" intensity="0.8"></a-light>
+    <a-light type="directional" color="#2de6c9" intensity="0.9" position="3 12 -4"></a-light>
+    <a-light type="point" id="guardianGlowLight" color="#2de6c9" intensity="3" distance="14" position="0 2 -4"></a-light>
+    <a-light type="point" color="#8b5cf6" intensity="2.5" distance="10" position="-3 3 -2"></a-light>
+    <a-light type="point" color="#ff6ec7" intensity="2" distance="10" position="3 3 -2"></a-light>
+
+    <!-- Camera & Cursor Rig -->
+    <a-entity id="cameraRig" position="0 1.6 1">
+      <a-camera look-controls="pointerLockEnabled: false">
+        <a-cursor
+          id="cursor"
+          color="#8b5cf6"
+          raycaster="objects: .clickable, .vr-btn"
+          animation__click="property: scale; startEvents: click; easing: easeInCubic; durability: 150; from: 0.1 0.1 0.1; to: 1 1 1"
+        ></a-cursor>
+      </a-camera>
+    </a-entity>
+
+    <!-- Underwater Chamber Architecture / Ruins Floor & Pillars -->
+    <!-- Floor -->
+    <a-cylinder radius="10" height="0.4" color="#0c1a24" position="0 -0.2 -4" material="roughness: 0.9; metalness: 0.2"></a-cylinder>
+    <a-ring radius-inner="9.5" radius-outer="9.9" color="#2de6c9" position="0 0.01 -4" rotation="-90 0 0" material="emissive: #2de6c9; emissiveIntensity: 0.8; side: double"></a-ring>
+
+    <!-- Ancient Stone Pillars surrounding the Guardian -->
+    <a-entity id="pillars">
+      <a-cylinder radius="0.45" height="7" color="#141f2b" position="-4.5 3 -8" material="roughness: 0.95"></a-cylinder>
+      <a-torus radius="0.5" radius-tubular="0.05" color="#2de6c9" position="-4.5 5.5 -8" rotation="90 0 0" material="emissive: #2de6c9; emissiveIntensity: 1.2"></a-torus>
+
+      <a-cylinder radius="0.45" height="7" color="#141f2b" position="4.5 3 -8" material="roughness: 0.95"></a-cylinder>
+      <a-torus radius="0.5" radius-tubular="0.05" color="#8b5cf6" position="4.5 5.5 -8" rotation="90 0 0" material="emissive: #8b5cf6; emissiveIntensity: 1.2"></a-torus>
+
+      <a-cylinder radius="0.45" height="7" color="#141f2b" position="-5.5 3 -1" material="roughness: 0.95"></a-cylinder>
+      <a-torus radius="0.5" radius-tubular="0.05" color="#8b5cf6" position="-5.5 5.5 -1" rotation="90 0 0" material="emissive: #8b5cf6; emissiveIntensity: 1.2"></a-torus>
+
+      <a-cylinder radius="0.45" height="7" color="#141f2b" position="5.5 3 -1" material="roughness: 0.95"></a-cylinder>
+      <a-torus radius="0.5" radius-tubular="0.05" color="#2de6c9" position="5.5 5.5 -1" rotation="90 0 0" material="emissive: #2de6c9; emissiveIntensity: 1.2"></a-torus>
+    </a-entity>
+
+    <!-- CENTER 3D GLB GUARDIAN MODEL WITH ALL INTERACTIONS & ANIMATIONS -->
+    <a-entity
+      id="guardianModel"
+      class="clickable"
+      gltf-model="#guardianGlb"
+      position="0 1.2 -4"
+      scale="1.2 1.2 1.2"
+      animation__idle="property: rotation; to: 0 360 0; dur: 20000; easing: linear; loop: true"
+      animation__float="property: position; dir: alternate; dur: 2500; easing: easeInOutSine; loop: true; to: 0 1.5 -4"
+      event-set__mouseenter="_event: mouseenter; scale: 1.35 1.35 1.35"
+      event-set__mouseleave="_event: mouseleave; scale: 1.2 1.2 1.2"
+      onclick="triggerGuardianInteraction()"
+    >
+      <!-- Glowing emissive aura torus surrounding Guardian -->
+      <a-torus radius="1.8" radius-tubular="0.05" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 1.4; transparent: true; opacity: 0.75" rotation="90 0 0"
+               animation="property: rotation; to: 90 360 0; dur: 8000; easing: linear; loop: true"></a-torus>
+      <a-torus radius="2.2" radius-tubular="0.04" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 1.2; transparent: true; opacity: 0.65" rotation="45 45 0"
+               animation="property: rotation; to: 45 405 360; dur: 12000; easing: linear; loop: true"></a-torus>
+    </a-entity>
+
+    <!-- Bubble Particles rising around Guardian -->
+    <a-entity id="bubbleGroup">
+      <a-sphere radius="0.06" color="#bfe9ff" position="-0.5 0.5 -3.5" material="emissive: #bfe9ff; emissiveIntensity: 0.8; transparent: true; opacity: 0.6" animation="property: position; to: -0.5 5 -3.5; dur: 3000; loop: true; easing: linear"></a-sphere>
+      <a-sphere radius="0.08" color="#bfe9ff" position="0.8 0.2 -4.2" material="emissive: #bfe9ff; emissiveIntensity: 0.8; transparent: true; opacity: 0.6" animation="property: position; to: 0.8 5.5 -4.2; dur: 3600; loop: true; easing: linear; delay: 500"></a-sphere>
+      <a-sphere radius="0.05" color="#2de6c9" position="-1.2 0.8 -4.0" material="emissive: #2de6c9; emissiveIntensity: 0.9; transparent: true; opacity: 0.7" animation="property: position; to: -1.2 6 -4.0; dur: 4200; loop: true; easing: linear; delay: 1000"></a-sphere>
+      <a-sphere radius="0.07" color="#c4b5fd" position="1.1 1.0 -3.8" material="emissive: #c4b5fd; emissiveIntensity: 0.9; transparent: true; opacity: 0.7" animation="property: position; to: 1.1 5.8 -3.8; dur: 3400; loop: true; easing: linear; delay: 800"></a-sphere>
+    </a-entity>
+
+    <!-- Bioluminescent Coral & Jellyfish Decor -->
+    <a-entity position="-3 0 -5">
+      <a-cone radius-bottom="0.4" radius-top="0.1" height="1.8" color="#ff6ec7" material="emissive: #ff6ec7; emissiveIntensity: 0.6"></a-cone>
+      <a-cone radius-bottom="0.3" radius-top="0.05" height="1.4" color="#2de6c9" position="0.4 0 0.3" material="emissive: #2de6c9; emissiveIntensity: 0.6"></a-cone>
+    </a-entity>
+    <a-entity position="3 0 -5">
+      <a-cone radius-bottom="0.4" radius-top="0.1" height="1.8" color="#7fffa0" material="emissive: #7fffa0; emissiveIntensity: 0.6"></a-cone>
+      <a-cone radius-bottom="0.3" radius-top="0.05" height="1.4" color="#8b5cf6" position="-0.4 0 0.3" material="emissive: #8b5cf6; emissiveIntensity: 0.6"></a-cone>
+    </a-entity>
+
+    <!-- Floating Jellyfish -->
+    <a-entity position="0 4.2 -4" animation="property: position; dir: alternate; dur: 3000; easing: easeInOutSine; loop: true; to: 0 4.8 -4">
+      <a-sphere radius="0.4" phi-length="360" theta-length="110" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 0.7; transparent: true; opacity: 0.6"></a-sphere>
+    </a-entity>
+
+    <!-- 3D VR Navigational Pedestal Buttons -->
+    <a-entity class="clickable vr-btn" position="-2 0.25 -2.5"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onclick="window.location.href='scene2.html'">
+      <a-cylinder class="clickable vr-btn" radius="0.65" height="0.12" color="#141f2b" material="emissive: #8b5cf6; emissiveIntensity: 0.6"></a-cylinder>
+      <a-ring class="clickable vr-btn" radius-inner="0.65" radius-outer="0.82" color="#8b5cf6" material="emissive: #8b5cf6; emissiveIntensity: 1.5; side: double" rotation="-90 0 0"></a-ring>
+      <a-text value="⬅️ Ke Hall of Relics (Scene 2)" align="center" position="0 0.55 0" color="#c4b5fd" scale="0.75 0.75 0.75"></a-text>
+    </a-entity>
+
+    <a-entity class="clickable vr-btn" position="2 0.25 -2.5"
+              event-set__mouseenter="_event: mouseenter; scale: 1.25 1.25 1.25"
+              event-set__mouseleave="_event: mouseleave; scale: 1 1 1"
+              onclick="window.location.href='index.html'">
+      <a-cylinder class="clickable vr-btn" radius="0.65" height="0.12" color="#141f2b" material="emissive: #2de6c9; emissiveIntensity: 0.6"></a-cylinder>
+      <a-ring class="clickable vr-btn" radius-inner="0.65" radius-outer="0.82" color="#2de6c9" material="emissive: #2de6c9; emissiveIntensity: 1.5; side: double" rotation="-90 0 0"></a-ring>
+      <a-text value="🌊 Ke Abyssal Sanctum (Scene 1)" align="center" position="0 0.55 0" color="#2de6c9" scale="0.75 0.75 0.75"></a-text>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    let isInteracting = false;
+
+    function triggerGuardianInteraction() {
+      const model = document.getElementById('guardianModel');
+      const light = document.getElementById('guardianGlowLight');
+      const modal = document.getElementById('infoModal');
+
+      if (isInteracting) return;
+      isInteracting = true;
+
+      // 1. Perform 360° spin & scale surge animation
+      const currentRotY = model.object3D.rotation.y;
+      const targetRotY = currentRotY + Math.PI * 2;
+
+      // Pulse light intensity
+      light.setAttribute('intensity', '6');
+
+      let startTime = null;
+      function animateSpin(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / 800, 1);
+        
+        model.object3D.rotation.y = currentRotY + progress * Math.PI * 2;
+        const scaleVal = 1.2 + Math.sin(progress * Math.PI) * 0.35;
+        model.setAttribute('scale', `${scaleVal} ${scaleVal} ${scaleVal}`);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          light.setAttribute('intensity', '3');
+          model.setAttribute('scale', '1.2 1.2 1.2');
+          isInteracting = false;
+          // 2. Open Info Modal Panel
+          modal.classList.add('active');
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    function closeModal() {
+      document.getElementById('infoModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>

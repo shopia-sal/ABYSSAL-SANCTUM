@@ -228,6 +228,139 @@ function createJellyfish(colorHex) {
   return group;
 }
 
+function createMuseumGlassCase(geometryType, colorHex, title, subtitle) {
+  const group = new THREE.Group();
+
+  // 1. Stone Pedestal Base
+  const pedestalMat = new THREE.MeshStandardMaterial({
+    color: PALETTE.stone,
+    roughness: 0.85,
+    metalness: 0.2,
+  });
+  const pedestal = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1.4), pedestalMat);
+  pedestal.position.y = 0.45;
+  group.add(pedestal);
+
+  // Pedestal Glowing Accent Rim
+  const rim = new THREE.Mesh(
+    new THREE.BoxGeometry(1.42, 0.06, 1.42),
+    new THREE.MeshStandardMaterial({
+      color: colorHex,
+      emissive: colorHex,
+      emissiveIntensity: 1.5,
+    })
+  );
+  rim.position.y = 0.9;
+  group.add(rim);
+
+  // 2. Museum Glass Cabinet Cover (Kotak Kaca Transparan)
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xdbf7ff,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.08,
+    metalness: 0.1,
+    transmission: 0.85,
+    ior: 1.4,
+    side: THREE.DoubleSide,
+  });
+  const glassCase = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.4, 1.25), glassMat);
+  glassCase.position.y = 1.6;
+  group.add(glassCase);
+
+  // Glass Frame Trim Edges
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    emissive: colorHex,
+    emissiveIntensity: 1.2,
+    roughness: 0.3,
+  });
+  const topFrame = new THREE.Mesh(new THREE.BoxGeometry(1.28, 0.04, 1.28), frameMat);
+  topFrame.position.y = 2.3;
+  group.add(topFrame);
+
+  const pGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.4, 8);
+  [
+    [-0.62, 1.6, -0.62],
+    [0.62, 1.6, -0.62],
+    [-0.62, 1.6, 0.62],
+    [0.62, 1.6, 0.62],
+  ].forEach(([px, py, pz]) => {
+    const post = new THREE.Mesh(pGeo, frameMat);
+    post.position.set(px, py, pz);
+    group.add(post);
+  });
+
+  // 3. Display Object Inside Glass Case (Box, Sphere, Cylinder, Torus, Cone)
+  let geo;
+  switch (geometryType) {
+    case "box":
+      geo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+      break;
+    case "sphere":
+      geo = new THREE.SphereGeometry(0.32, 24, 24);
+      break;
+    case "cylinder":
+      geo = new THREE.CylinderGeometry(0.24, 0.24, 0.65, 24);
+      break;
+    case "torus":
+      geo = new THREE.TorusGeometry(0.3, 0.12, 16, 32);
+      break;
+    case "cone":
+      geo = new THREE.ConeGeometry(0.32, 0.65, 24);
+      break;
+    default:
+      geo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  }
+
+  const objMat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    emissive: colorHex,
+    emissiveIntensity: 0.7,
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const artifactObj = new THREE.Mesh(geo, objMat);
+  artifactObj.position.y = 1.6;
+  group.add(artifactObj);
+
+  // 4. Internal Spotlight
+  const light = new THREE.PointLight(colorHex, 3.5, 4);
+  light.position.set(0, 1.6, 0);
+  group.add(light);
+
+  // 5. Museum Label Plate
+  const cvs = document.createElement("canvas");
+  cvs.width = 256; cvs.height = 80;
+  const ctx = cvs.getContext("2d");
+  ctx.fillStyle = "rgba(4, 14, 24, 0.9)";
+  ctx.fillRect(0, 0, 256, 80);
+  ctx.strokeStyle = "#" + colorHex.toString(16).padStart(6, "0");
+  ctx.lineWidth = 3;
+  ctx.strokeRect(4, 4, 248, 72);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 16px Georgia";
+  ctx.textAlign = "center";
+  ctx.fillText(title, 128, 34);
+  ctx.fillStyle = "#" + colorHex.toString(16).padStart(6, "0");
+  ctx.font = "italic 13px Georgia";
+  ctx.fillText(subtitle, 128, 58);
+
+  const labelTex = new THREE.CanvasTexture(cvs);
+  const labelMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.9, 0.3),
+    new THREE.MeshBasicMaterial({ map: labelTex, side: THREE.DoubleSide })
+  );
+  labelMesh.position.set(0, 0.45, 0.72);
+  group.add(labelMesh);
+
+  group.userData.pulseSpeed = 1.5;
+  group.userData.pulseMeshes = [artifactObj];
+  group.userData.artifactObj = artifactObj;
+
+  return group;
+}
+
 export function createWorld(scene) {
   scene.background = new THREE.Color(PALETTE.abyss);
   scene.fog = new THREE.FogExp2(PALETTE.abyss, 0.028);
@@ -389,6 +522,64 @@ export function createWorld(scene) {
     scene.add(tablet);
   });
 
+  /* ---------- 5 MUSEUM GLASS CASES (5 DIFFERENT GEOMETRIES & UNIQUE COLORS) ---------- */
+  const museumExhibits = [
+    {
+      type: "box",
+      color: 0xffb703, // Amber Gold
+      title: "📦 Kubus Energi Purba",
+      subtitle: "Geometric Relic #1 (Box)",
+      pos: [-10, 0, -5],
+      rotY: Math.PI / 4,
+    },
+    {
+      type: "sphere",
+      color: 0x00f5d4, // Aquamarine Cyan
+      title: "🔮 Orb Samudra Sanctum",
+      subtitle: "Geometric Relic #2 (Sphere)",
+      pos: [-10, 0, 5],
+      rotY: -Math.PI / 4,
+    },
+    {
+      type: "cylinder",
+      color: 0xf72585, // Crimson Red
+      title: "🏛️ Pilar Prasasti Kuil",
+      subtitle: "Geometric Relic #3 (Cylinder)",
+      pos: [10, 0, -5],
+      rotY: -Math.PI / 4,
+    },
+    {
+      type: "torus",
+      color: 0x38b000, // Emerald Green
+      title: "⭕ Cincin Kehidupan Laut",
+      subtitle: "Geometric Relic #4 (Torus)",
+      pos: [10, 0, 5],
+      rotY: Math.PI / 4,
+    },
+    {
+      type: "cone",
+      color: 0x7209b7, // Royal Violet
+      title: "🔺 Piramida Kristal Abyssal",
+      subtitle: "Geometric Relic #5 (Cone)",
+      pos: [-6, 0, 10],
+      rotY: Math.PI / 6,
+    },
+  ];
+
+  museumExhibits.forEach((e) => {
+    const glassCase = createMuseumGlassCase(e.type, e.color, e.title, e.subtitle);
+    glassCase.position.set(...e.pos);
+    glassCase.rotation.y = e.rotY;
+    scene.add(glassCase);
+    pulseObjects.push(glassCase);
+    colliders.push(
+      new THREE.Box3(
+        new THREE.Vector3(e.pos[0] - 0.7, 0, e.pos[2] - 0.7),
+        new THREE.Vector3(e.pos[0] + 0.7, 2.4, e.pos[2] + 0.7)
+      )
+    );
+  });
+
   const coralSpots = [
     [-8, 0, 6],
     [8, 0, 6],
@@ -396,7 +587,7 @@ export function createWorld(scene) {
     [11, 0, -3],
     [-5, 0, 12],
     [5, 0, 12],
-    [0, 0, 3],
+    [8, 0, 12],
     [-6, 0, -10],
     [6, 0, -10],
   ];
@@ -426,7 +617,7 @@ export function createWorld(scene) {
     [5, 5, 2],
     [-9, 6, 8],
     [9, 4.2, -8],
-    [0, 7, -14],
+    [-5, 7.5, -6],
     [-13, 4.5, 2],
     [13, 5.5, 6],
   ];
@@ -443,6 +634,50 @@ export function createWorld(scene) {
     scene.add(jelly);
     jellies.push(jelly);
   });
+
+  /* ---------- Volumetric Oceanic Light Rays (God-Rays) ---------- */
+  const rayGroup = new THREE.Group();
+  for (let i = 0; i < 6; i++) {
+    const rayMat = new THREE.MeshBasicMaterial({
+      color: PALETTE.teal,
+      transparent: true,
+      opacity: 0.12,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ray = new THREE.Mesh(new THREE.ConeGeometry(2.0 + Math.random(), CAVE_H, 16, 1, true), rayMat);
+    ray.position.set(-12 + i * 5, CAVE_H / 2, -6 + (i % 3) * 4);
+    ray.rotation.z = (Math.random() - 0.5) * 0.25;
+    rayGroup.add(ray);
+  }
+  scene.add(rayGroup);
+
+  /* ---------- Glowing Temple Walkway Pathway Tiles ---------- */
+  for (let z = 13; z >= -6; z -= 3.2) {
+    const tile = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 0.05, 2.0),
+      new THREE.MeshStandardMaterial({
+        color: PALETTE.stone,
+        emissive: PALETTE.teal,
+        emissiveIntensity: 0.2,
+        roughness: 0.8,
+      })
+    );
+    tile.position.set(0, 0.02, z);
+    scene.add(tile);
+
+    const edgeGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(2.65, 0.06, 0.12),
+      new THREE.MeshStandardMaterial({
+        color: PALETTE.teal,
+        emissive: PALETTE.teal,
+        emissiveIntensity: 1.8,
+      })
+    );
+    edgeGlow.position.set(0, 0.03, z + 0.95);
+    scene.add(edgeGlow);
+  }
 
   const stepCount = 9,
     stepH = 0.45,
@@ -498,12 +733,85 @@ export function createWorld(scene) {
       metalness: 0.6,
     }),
   );
-  relic.position.set(0, platformY + 1.6, platformZ);
+  // Positioned on side wall pedestal completely clear of portal entrance
+  relic.position.set(-14, 3.2, 0);
+  relic.rotation.y = Math.PI / 2;
   scene.add(relic);
   const relicLight = new THREE.PointLight(PALETTE.violet, 6, 12);
   relicLight.position.copy(relic.position);
   scene.add(relicLight);
   pulseObjects.push({ userData: { pulseSpeed: 1.4, pulseMeshes: [relic] } });
+
+  /* ---------- Portal Ancient Coral Gate (3D Circular Portal) ---------- */
+  const portalGroup = new THREE.Group();
+  portalGroup.position.set(0, platformY + 2.2, platformZ);
+
+  // Pillar Structure
+  const pillarMat = new THREE.MeshStandardMaterial({ color: PALETTE.stone, roughness: 0.9 });
+  const pLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.55, 4.8, 16), pillarMat);
+  pLeft.position.set(-2.2, 0, 0);
+  const pRight = pLeft.clone();
+  pRight.position.set(2.2, 0, 0);
+  portalGroup.add(pLeft, pRight);
+
+  // Arch Header Beam
+  const archBeam = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.5, 0.7), pillarMat);
+  archBeam.position.set(0, 2.4, 0);
+  portalGroup.add(archBeam);
+
+  // Glowing Circular Portal Disc (Swirling Cyan-Violet Core)
+  const portalDiscMat = new THREE.MeshBasicMaterial({
+    color: PALETTE.teal,
+    transparent: true,
+    opacity: 0.85,
+    side: THREE.DoubleSide
+  });
+  const portalCore = new THREE.Mesh(new THREE.CircleGeometry(2.1, 40), portalDiscMat);
+  portalCore.position.set(0, 0.2, 0);
+  portalGroup.add(portalCore);
+
+  // Outer & Inner Glowing Torus Rings
+  const outerRingMat = new THREE.MeshStandardMaterial({ color: PALETTE.violet, emissive: PALETTE.violet, emissiveIntensity: 1.8 });
+  const pRingOuter = new THREE.Mesh(new THREE.TorusGeometry(2.15, 0.09, 16, 48), outerRingMat);
+  pRingOuter.position.set(0, 0.2, 0);
+  portalGroup.add(pRingOuter);
+
+  const innerRingMat = new THREE.MeshStandardMaterial({ color: PALETTE.teal, emissive: PALETTE.teal, emissiveIntensity: 2.0 });
+  const pRingInner = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.06, 16, 48), innerRingMat);
+  pRingInner.position.set(0, 0.2, 0.03);
+  portalGroup.add(pRingInner);
+
+  // PointLight for 3D Portal Glow
+  const portalLight = new THREE.PointLight(PALETTE.teal, 6, 14);
+  portalLight.position.set(0, 0.2, 0.6);
+  portalGroup.add(portalLight);
+
+  // 3D Canvas Label above Portal
+  const pLabelCvs = document.createElement("canvas");
+  pLabelCvs.width = 512; pLabelCvs.height = 128;
+  const pCtx = pLabelCvs.getContext("2d");
+  pCtx.fillStyle = "rgba(2, 10, 18, 0.88)";
+  pCtx.fillRect(0, 0, 512, 128);
+  pCtx.strokeStyle = "#2de6c9"; pCtx.lineWidth = 4;
+  pCtx.strokeRect(6, 6, 500, 116);
+  pCtx.fillStyle = "#2de6c9";
+  pCtx.font = "bold 26px Georgia";
+  pCtx.textAlign = "center";
+  pCtx.fillText("🌀 PORTAL ANCIENT CORAL GATE", 256, 52);
+  pCtx.fillStyle = "#8b5cf6";
+  pCtx.font = "italic 19px Georgia";
+  pCtx.fillText("➔ Berenang / Dekati Portal untuk Masuk Scene 2", 256, 90);
+  const pTex = new THREE.CanvasTexture(pLabelCvs);
+
+  const pLabelMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.2, 1.05),
+    new THREE.MeshBasicMaterial({ map: pTex, transparent: true, side: THREE.DoubleSide })
+  );
+  pLabelMesh.position.set(0, 3.1, 0.1);
+  portalGroup.add(pLabelMesh);
+
+  scene.add(portalGroup);
+  pulseObjects.push({ userData: { pulseSpeed: 2.2, pulseMeshes: [pRingOuter, pRingInner] } });
 
   const BUBBLE_COUNT = 260;
   const bubbleGeo = new THREE.BufferGeometry();
@@ -541,5 +849,5 @@ export function createWorld(scene) {
     },
   };
 
-  return { colliders, pulseObjects, jellies, bubbles };
+  return { colliders, pulseObjects, jellies, bubbles, portalGate: portalGroup };
 }

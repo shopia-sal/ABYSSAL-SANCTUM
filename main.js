@@ -20,8 +20,10 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.xr.enabled = true;
 
-const { colliders, pulseObjects, jellies, bubbles } = createWorld(scene);
+const { colliders, pulseObjects, jellies, bubbles, portalGate } = createWorld(scene);
 const player = createPlayer(camera, renderer.domElement, colliders);
+
+let portalTransitioning = false;
 
 const ballCountEl = document.getElementById("ballCount");
 const shooter = createShooter(scene, camera, (n) => {
@@ -38,7 +40,21 @@ player.controls.addEventListener("unlock", () =>
 );
 
 window.addEventListener("click", () => {
-  if (player.controls.isLocked) shooter.shoot();
+  if (player.controls.isLocked && !portalTransitioning) {
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+    const intersects = raycaster.intersectObjects(portalGate.children, true);
+    if (intersects.length > 0 && intersects[0].distance < 45) {
+      portalTransitioning = true;
+      document.body.style.transition = "opacity 0.5s ease";
+      document.body.style.opacity = "0";
+      setTimeout(() => {
+        window.location.href = "scene2.html";
+      }, 500);
+      return;
+    }
+    shooter.shoot();
+  }
 });
 
 document
@@ -66,11 +82,28 @@ renderer.setAnimationLoop(() => {
   shooter.update(delta);
   bubbles.update(delta);
 
+  /* Portal Proximity Detection */
+  if (portalGate && !portalTransitioning) {
+    const dist = camera.position.distanceTo(portalGate.position);
+    if (dist < 3.2) {
+      portalTransitioning = true;
+      document.body.style.transition = "opacity 0.5s ease";
+      document.body.style.opacity = "0";
+      setTimeout(() => {
+        window.location.href = "scene2.html";
+      }, 500);
+    }
+  }
+
   pulseObjects.forEach((o) => {
     const pulse = 0.35 + Math.sin(t * o.userData.pulseSpeed) * 0.25;
     o.userData.pulseMeshes.forEach((m) => {
       m.material.emissiveIntensity = pulse;
     });
+    if (o.userData.artifactObj) {
+      o.userData.artifactObj.rotation.y += 0.8 * delta;
+      o.userData.artifactObj.rotation.x += 0.3 * delta;
+    }
   });
 
   jellies.forEach((j) => {
